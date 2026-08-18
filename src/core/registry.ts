@@ -56,9 +56,29 @@ function deactivate(id: string): void {
 function getConfig(id: string): Record<string, string | boolean | number> {
   const p = _store[id];
   if (!p?.config) return {};
-  const defaults: Record<string, string | boolean | number> = {};
-  for (const field of p.config) defaults[field.key] = field.default ?? "";
-  return {...defaults, ..._cfgStore[id]};
+  const raw = _cfgStore[id] ?? {};
+  const result: PluginConfig = {};
+
+  for (const field of p.config) {
+    const val = raw[field.key];
+    if (val === undefined) {
+      result[field.key] = field.default;
+      continue;
+    }
+    switch (field.type) {
+      case "checkbox":
+        result[field.key] = val === true || val === "true";
+        break;
+      case "number": {
+        const n = typeof val === "number" ? val : parseFloat(String(val));
+        result[field.key] = Number.isFinite(n) ? n : field.default;
+        break;
+      }
+      default:
+        result[field.key] = String(val);
+    }
+  }
+  return result;
 }
 
 function loadConfigs(allConfigs: PluginConfigMap): void {
