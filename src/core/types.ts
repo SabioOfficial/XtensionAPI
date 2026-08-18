@@ -27,7 +27,7 @@ export type PluginManifestEntry = Pick<PluginDefinition, "id" | "name" | "descri
 export type PluginConfigMap = Record<string, Record<string, string | boolean | number>>;
 export type PluginStateMap = Record<string, boolean>;
 
-export interface ExterstellarAPI {
+export interface XtensionAPIShape {
   register(plugin: PluginDefinition): void;
   getAll(): PluginEntry[];
   activate(id: string): void;

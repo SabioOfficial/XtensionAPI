@@ -1,11 +1,11 @@
-import type { ExterstellarAPI, PluginConfigMap, PluginDefinition, PluginEntry } from "../types";
+import type { XtensionAPIShape, PluginConfigMap, PluginDefinition, PluginEntry } from "../types";
 
 const _store: Record<string, PluginEntry> = {};
 let _cfgStore: PluginConfigMap = {};
 
 function register(plugin: PluginDefinition): void {
   if (!plugin.id || !plugin.name) {
-    console.warn("[Exterstellar | Plugin Registrar] Skipping plugin with missing id/name:", plugin);
+    console.warn("[XtensionAPI | Plugin Registrar] Skipping plugin with missing id/name:", plugin);
     return;
   }
   _store[plugin.id] = {...plugin, _active: false, _cleanup: null};
@@ -21,7 +21,7 @@ function activate(id: string): void {
     p._cleanup = typeof result === "function" ? result : null;
     p._active = true;
   } catch (err) {
-    console.warn(`[Exterstellar | Plugin Registrar] Plugin "${id}" threw during start:`, err);
+    console.warn(`[XtensionAPI | Plugin Registrar] Plugin "${id}" threw during start:`, err);
   }
 }
 
@@ -47,7 +47,7 @@ function loadConfigs(allConfigs: PluginConfigMap): void {
   _cfgStore = allConfigs ?? {};
 }
 
-export const Exterstellar: ExterstellarAPI = {
+export const XtensionAPI: XtensionAPIShape = {
   register,
   getAll,
   activate,
@@ -58,4 +58,4 @@ export const Exterstellar: ExterstellarAPI = {
   getExport(id) {return this._exports[id] ?? null;},
 };
 
-(window as unknown as {Exterstellar: ExterstellarAPI}).Exterstellar = Exterstellar;
+(window as unknown as {XtensionAPI: XtensionAPIShape}).XtensionAPI = XtensionAPI;
