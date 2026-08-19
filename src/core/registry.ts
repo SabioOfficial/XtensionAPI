@@ -15,9 +15,19 @@ function register(plugin: PluginDefinition): void {
 
 const getAll = (): PluginEntry[] => Object.values(_store);
 
-function activate(id: string): void {
+function activate(id: string, _visiting = new Set<string>()): void {
   const p = _store[id];
-  if (!p) return;
+  if (!p || p._active) return;
+
+  if (_visiting.has(id)) {
+    console.warn(`[XtensionAPI | Plugin Registrar] Circular dependsOn involving "${id}". Activating without further ordering.`);
+  } else {
+    _visiting.add(id);
+    for (const depId of p.dependsOn ?? []) {
+      if (_store[depId] && !_store[depId]._active) activate(depId, _visiting);
+    }
+    _visiting.delete(id);
+  }
 
   p._cleanupFns = [];
   p._configListeners = [];

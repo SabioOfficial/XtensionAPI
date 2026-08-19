@@ -24,6 +24,7 @@ export interface PluginDefinition {
   description?: string;
   author?: string;
   config?: PluginConfigField[];
+  dependsOn?: string[];
   start?: (ctx: PluginContext) => void;
 }
 
