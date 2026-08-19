@@ -10,7 +10,7 @@ function register(plugin: PluginDefinition): void {
     console.warn("[XtensionAPI | Plugin Registrar] Skipping plugin with missing id/name:", plugin);
     return;
   }
-  _store[plugin.id] = {...plugin, _active: false, _cleanupFns: []};
+  _store[plugin.id] = {...plugin, _active: false, _cleanupFns: [], _configListeners: [], _lastConfig: {}};
 }
 
 const getAll = (): PluginEntry[] => Object.values(_store);
@@ -20,12 +20,18 @@ function activate(id: string): void {
   if (!p) return;
 
   p._cleanupFns = [];
+  p._configListeners = [];
+  p._lastConfig = getConfig(id);
+
   const ctx: PluginContext = {
     id: p.id,
-    config: getConfig(id),
+    config: p._lastConfig,
     api: _api,
     onCleanup(fn) {
       p._cleanupFns.push(fn);
+    },
+    onConfigChange(fn) {
+      p._configListeners.push(fn);
     },
   };
 
@@ -47,6 +53,7 @@ function runCleanup(p: PluginEntry): void {
     }
   }
   p._cleanupFns = [];
+  p._configListeners = [];
 }
 
 function deactivate(id: string): void {
@@ -54,6 +61,23 @@ function deactivate(id: string): void {
   if (!p?._active) return;
   runCleanup(p);
   p._active = false;
+}
+
+function setConfig(id: string, config: PluginConfig): void {
+  _cfgStore[id] = config;
+  const p = _store[id];
+  if (!p?._active) return;
+
+  const next = getConfig(id);
+  const prev = p._lastConfig;
+  p._lastConfig = next;
+  for (const listener of p._configListeners) {
+    try {
+      listener(next, prev);
+    } catch (err) {
+      console.warn(`[XtensionAPI | Plugin Registrar] Plugin "${id}" config listener threw:`, err);
+    }
+  }
 }
 
 function getConfig(id: string): Record<string, string | boolean | number> {
@@ -95,6 +119,7 @@ export const XtensionAPI: XtensionAPIShape = {
   deactivate,
   getConfig,
   loadConfigs,
+  setConfig,
   api: _api,
 };
 

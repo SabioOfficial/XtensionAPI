@@ -15,6 +15,7 @@ export interface PluginContext {
   config: PluginConfig;
   api: ApiRegistry;
   onCleanup(fn: () => void): void;
+  onConfigChange(fn: (next: PluginConfig, prev: PluginConfig) => void): void;
 }
 
 export interface PluginDefinition {
@@ -29,6 +30,8 @@ export interface PluginDefinition {
 export interface PluginEntry extends PluginDefinition {
   _active: boolean;
   _cleanupFns: Array<() => void>;
+  _configListeners: Array<(next: PluginConfig, prev: PluginConfig) => void>;
+  _lastConfig: PluginConfig;
 }
 
 export type PluginManifestEntry = Pick<PluginDefinition, "id" | "name" | "description" | "author" | "config">;
@@ -53,5 +56,6 @@ export interface XtensionAPIShape {
   deactivate(id: string): void;
   getConfig(id: string): PluginConfig;
   loadConfigs(allConfigs: PluginConfigMap): void;
+  setConfig(id: string, config: PluginConfig): void;
   api: ApiRegistry;
 }
