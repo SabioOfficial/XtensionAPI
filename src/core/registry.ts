@@ -1,7 +1,9 @@
+import { createApiRegistry } from "./api-registry";
 import type { XtensionAPIShape, PluginConfig, PluginConfigMap, PluginContext, PluginDefinition, PluginEntry } from "./types";
 
 const _store: Record<string, PluginEntry> = {};
 let _cfgStore: PluginConfigMap = {};
+const _api = createApiRegistry();
 
 function register(plugin: PluginDefinition): void {
   if (!plugin.id || !plugin.name) {
@@ -21,6 +23,7 @@ function activate(id: string): void {
   const ctx: PluginContext = {
     id: p.id,
     config: getConfig(id),
+    api: _api,
     onCleanup(fn) {
       p._cleanupFns.push(fn);
     },
@@ -92,8 +95,7 @@ export const XtensionAPI: XtensionAPIShape = {
   deactivate,
   getConfig,
   loadConfigs,
-  _exports: {},
-  getExport(id) {return this._exports[id] ?? null;},
+  api: _api,
 };
 
 (window as unknown as {XtensionAPI: XtensionAPIShape}).XtensionAPI = XtensionAPI;

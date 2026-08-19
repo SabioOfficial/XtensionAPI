@@ -13,6 +13,7 @@ export type PluginConfig = Record<string, string | boolean | number>;
 export interface PluginContext {
   id: string;
   config: PluginConfig;
+  api: ApiRegistry;
   onCleanup(fn: () => void): void;
 }
 
@@ -35,6 +36,16 @@ export type PluginManifestEntry = Pick<PluginDefinition, "id" | "name" | "descri
 export type PluginConfigMap = Record<string, Record<string, string | boolean | number>>;
 export type PluginStateMap = Record<string, boolean>;
 
+export interface ApiMethodMap { }
+
+export interface ApiRegistry {
+  register<K extends keyof ApiMethodMap>(name: K, fn: ApiMethodMap[K]): void;
+  unregister(name: keyof ApiMethodMap): void;
+  has(name: keyof ApiMethodMap): boolean;
+  call<K extends keyof ApiMethodMap>(name: K, ...args: Parameters<ApiMethodMap[K]>): ReturnType<ApiMethodMap[K]>;
+  callOptional<K extends keyof ApiMethodMap>(name: K, ...args: Parameters<ApiMethodMap[K]>): ReturnType<ApiMethodMap[K]> | null;
+}
+
 export interface XtensionAPIShape {
   register(plugin: PluginDefinition): void;
   getAll(): PluginEntry[];
@@ -42,6 +53,5 @@ export interface XtensionAPIShape {
   deactivate(id: string): void;
   getConfig(id: string): PluginConfig;
   loadConfigs(allConfigs: PluginConfigMap): void;
-  _exports: Record<string, unknown>;
-  getExport(id: string): unknown;
+  api: ApiRegistry;
 }
